@@ -33,7 +33,8 @@ class PostcodeController extends Controller
         // Sanitise the postcode to remove any spaces
         $search = str_replace(' ', '', $request->get('text'));
 
-        $postcodes = Postcode::where('postcode', 'LIKE', '%' . $search . '%')
+        $postcodes = Postcode::select(['postcode'])
+            ->where('postcode', 'LIKE', '%' . $search . '%')
             ->paginate(20);
 
         return response()->json([
