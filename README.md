@@ -1,66 +1,105 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Passenger PHP Code Task
+### Initial Setup
+Clone onto local system:
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+`git clone git@github.com:cgoosey1/passenger.git passenger.local`
 
-## About Laravel
+Install dependencies with composer
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+`composer install`
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Create a local database in MySQL
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Copy `.env.example` file as `.env`, add local database connection details.
 
-## Learning Laravel
+Run migrations
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+`php artisan migrate`
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+To quickly create a webserver to test API functionality use the command
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+`php artisan serve`
 
-## Laravel Sponsors
+### Importing Postcodes
+The postcode importer uses Ordnance Survey Data Hub, if you have an API code you should add it to the `.env`
+file with parameter `OS_DATAHUB_API_KEY`.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+You can run the postcode importer using `php artisan postcode:import`.
 
-### Premium Partners
+This coding tasks assumes you don't have an API key, so to make it simpler I have included a copy of the most recent
+postcode zip file (as of September 2023), to utilise this use the --use-previous parameter 
+(`php artisan postcode:import --use-previous`).
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+This will create a job for each postcode CSV file, these can be ran using the `php artisan queue:work` 
+command.
 
-## Contributing
+One thing to note here is I did notice on my local system, after I had ran several jobs the command crashes due to
+available memory. In production situations you often use a service like supervisor that would automatically restart
+the jobs when they fail, since this is just a coding challenge I have not attempted to fix this issue.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Notes around Importing Postcodes
+Important files to assess: 
+ - app/Console/Commands/PostcodeImport.php
+ - app/Jobs/ProcessPostcodeCSV.php
 
-## Code of Conduct
+I was a little concerned about handling a zip file, I am attempting to only extract files I need from this zip, in
+the hopes that avoids a zip bomb scenario, I would also probably have this system in isolation from the rest of the 
+application, just sending the individual postcode csv files to s3.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+I also decided to use Jobs to handle the load of processing 1.8 odd million postcodes so we can keep that processing 
+away from the main application.
 
-## Security Vulnerabilities
+I feel I might have over-engineered the postcode importer to handle inserts and updates, but oh well. Also I made
+the choice on purpose not to convert the postcodes to latitude/longitude during the import as I felt it would be 
+easier to handle the searching using Easting/Northing.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Search by Text
+You can call this route using `GET /api/postcode/search/text`, it expects the parameter `text` to be passed in.
 
-## License
+There is no authentication/authorisation in this application, I didn't think it would add anything to the test and
+didn't want to waste time on it.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Assuming you are using a web server created by `php artisan serve` you can make the following curl request to view data.
+```
+curl --location 'http://127.0.0.1:8000/api/postcode/search/text?text=mk17%209db'
+```
+
+### Notes about Search by Text
+Important files to assess:
+- app/Http/Controllers/PostcodeController.php
+
+Wasn't really sure the best way to go about this, my first approach involved showing results that started with the
+search term first, but ultimately decided to keep this really simple rather than lose performance trying to make
+the search more relevant. Mixed feelings if this was the right approach.
+
+I used Form Request Validation to handle the request data (visible in app/Http/Requests/SearchByTextRequest.php).
+
+Also included Laravels pagination on this as short search terms will cause a lot of results.
+### Search by Location
+You can call this route using `GET /api/postcode/search/location`, it expects latitude and longitude to be passed in.
+
+Again there is no auth on this route.
+
+Assuming you are using a web server created by `php artisan serve` you can make the following curl request to view data.
+
+```
+curl --location --request GET 'http://127.0.0.1:8000/api/postcode/search/location?latitude=51.9558&longitude=-0.714016' \
+```
+Search radius is 0.5km, I know in the UK I should use miles, but I decided to make it easier on myself.
+### Notes on Search by Location
+Important files to assess:
+- app/Http/Controllers/PostcodeController.php
+
+I did a lot of heavy lifting with PHPCoord, I also use Form Request Validation to handle the request data 
+(visible in app/Http/Requests/SearchByLocationRequest.php).
+
+I would normally split up my logic a bit nicer, i.e. have PostcodeController@searchByLocation as it is, but have all 
+other associated methods in a Service. Ultimately I decided just to keep it all in one class for you to review.
+
+The associated methods are all designed to be simple with the thought of Unit
+Testing, though I think in a few spots I could have probably made simpler methods more in keeping with Unit Testing.
+
+### General Notes
+I have focused on the specific requirements of the test and left a lot out, i.e. Authorisation, Testing, Logging etc.
+
+Excited to hear feedback, let me know if you have any questions!
