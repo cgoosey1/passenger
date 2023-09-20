@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('postcode', function (Blueprint $table) {
             $table->id();
             $table->string('postcode', 7);
-            $table->integer('eastings');
-            $table->integer('northings');
+            $table->integer('easting');
+            $table->integer('northing');
             $table->timestamps();
         });
     }

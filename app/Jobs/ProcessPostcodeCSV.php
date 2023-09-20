@@ -42,19 +42,19 @@ class ProcessPostcodeCSV implements ShouldQueue
                 continue;
             }
 
-            $eastings = (int) $row[2]; // Eastings Column
-            $northings = (int) $row[3]; // Northings Column
+            $easting = (int) $row[2]; // Eastings Column
+            $northing = (int) $row[3]; // Northings Column
 
             if (isset($postcodeLookup[$postcode])) {
                 // I don't imagine there will be many times we need to update existing postcode information
-                $this->updatePostcode($postcodeLookup[$postcode], $postcode, $eastings, $northings);
+                $this->updatePostcode($postcodeLookup[$postcode], $postcode, $easting, $northing);
                 continue;
             }
 
             $insertData[] = [
                 'postcode' => $postcode,
-                'eastings' => $eastings,
-                'northings' => $northings,
+                'easting' => $easting,
+                'northing' => $northing,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ];
@@ -89,14 +89,14 @@ class ProcessPostcodeCSV implements ShouldQueue
         // I struggled a bit to come up with a nice way to insert or update data in an
         // efficient manner whilst also not over engineering. In the end I decided to
         // assume I will always be working with files like 'ab.csv' and only caring about
-        // eastings & northings. I would do things quite definitely in a more flexible system.
+        // easting & northing. I would do things quite definitely in a more flexible system.
         $existingPostcodes = Postcode::whereRaw('SUBSTRING(postcode,1,2) = ?', [substr($csvFile, 0, 2)])
             ->get();
         $postcodeLookup = [];
         foreach ($existingPostcodes as $postcode) {
             $postcodeLookup[$postcode->postcode] = [
-                'eastings' => $postcode->eastings,
-                'northings' => $postcode->northings,
+                'easting' => $postcode->easting,
+                'northing' => $postcode->northing,
             ];
         }
 
@@ -127,18 +127,18 @@ class ProcessPostcodeCSV implements ShouldQueue
      *
      * @param $postcodeLookup
      * @param $postcode
-     * @param $eastings
-     * @param $nothings
+     * @param $easting
+     * @param $nothing
      * @return void
      */
-    protected function updatePostcode($postcodeLookup, $postcode, $eastings, $northings) : void
+    protected function updatePostcode($postcodeLookup, $postcode, $easting, $northing) : void
     {
-        if ($eastings != $postcodeLookup['eastings']
-            || $northings != $postcodeLookup['northings']) {
+        if ($easting != $postcodeLookup['easting']
+            || $northing != $postcodeLookup['northing']) {
             Postcode::where('postcode', $postcode)
                 ->update([
-                    'eastings' => $eastings,
-                    'northings' => $northings,
+                    'easting' => $easting,
+                    'northing' => $northing,
                 ]);
         }
     }

@@ -9,5 +9,5 @@ class Postcode extends Model
 {
     use HasFactory;
     protected $table = 'postcode';
-    protected $fillable = ['postcode', 'eastings', 'northings'];
+    protected $fillable = ['postcode', 'easting', 'northing'];
 }

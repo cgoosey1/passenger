@@ -111,10 +111,10 @@ class PostcodeController extends Controller
         $lowerNorthingBoundry = $northing - $radius;
         $higherNorthingBoundry = $northing + $radius;
 
-        return Postcode::where('eastings', '>=', $lowerEastingBoundry)
-            ->where('eastings', '<=', $higherEastingBoundry)
-            ->where('northings', '>=', $lowerNorthingBoundry)
-            ->where('northings', '<=', $higherNorthingBoundry)
+        return Postcode::where('easting', '>=', $lowerEastingBoundry)
+            ->where('easting', '<=', $higherEastingBoundry)
+            ->where('northing', '>=', $lowerNorthingBoundry)
+            ->where('northing', '<=', $higherNorthingBoundry)
             ->get();
     }
 
@@ -147,8 +147,8 @@ class PostcodeController extends Controller
             // Create the new point so we can see how far from the origin
             $newPoint = ProjectedPoint::createFromEastingNorthing(
                 $ukRefSystem,
-                new Metre($postcode->eastings),
-                new Metre($postcode->northings)
+                new Metre($postcode->easting),
+                new Metre($postcode->northing)
             );
 
             // Distance in meters
