@@ -133,7 +133,10 @@ class PostcodeImport extends Command
             copy('zip://' . $storageDirectory . $zipfilename . '#' . $entry, $postcodeCSVFiles . $filename);
 
             // Checking a file extension isn't a great way to confirm file type, so lets double check before
-            // processing this file any further.
+            // processing this file any further
+            // Side note, I'm aware there are a lot of csv mime types around the place, but since this is meant to be
+            // simple and the data is all from one consistent source I decided to try keep the logic a lot more
+            // straightforward.
             if (finfo_file($finfo, $postcodeCSVFiles . $filename) != "text/csv") {
                 // Cleanup if this isn't a real CSV file
                 unlink($postcodeCSVFiles . $filename);

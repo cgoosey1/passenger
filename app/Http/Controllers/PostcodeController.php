@@ -5,10 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SearchByLocationRequest;
 use App\Http\Requests\SearchByTextRequest;
 use App\Models\Postcode;
-use http\Client\Response;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 use PHPCoord\CoordinateReferenceSystem\Geographic2D;
 use PHPCoord\CoordinateReferenceSystem\Projected;
 use PHPCoord\Point\GeographicPoint;
@@ -56,7 +54,7 @@ class PostcodeController extends Controller
         $longitude = $request->get('longitude');
 
         list($easting, $northing) = $this->convertToEastingNorthing($latitude, $longitude);
-        // Lets get a rough list of bits that might be nearby
+        // Lets get a rough list of postcodes that might be nearby
         $postcodes = $this->getNearbyPostcodes($easting, $northing);
 
         // And now lets refine our results, no point spending processor power on a more accurate
