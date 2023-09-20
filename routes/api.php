@@ -16,5 +16,6 @@ use App\Http\Controllers\PostcodeController;
 */
 
 Route::prefix('postcode')->controller(PostcodeController::class)->group(function () {
+    Route::get('/search/text', 'searchByText');
     Route::get('/search/location', 'searchByLocation');
 });

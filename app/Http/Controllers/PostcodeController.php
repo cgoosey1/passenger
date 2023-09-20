@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SearchByLocationRequest;
+use App\Http\Requests\SearchByTextRequest;
 use App\Models\Postcode;
+use http\Client\Response;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use PHPCoord\CoordinateReferenceSystem\Geographic2D;
 use PHPCoord\CoordinateReferenceSystem\Projected;
 use PHPCoord\Point\GeographicPoint;
@@ -19,13 +23,33 @@ class PostcodeController extends Controller
     const LOCATION_RADIUS = 0.5;
 
     /**
+     * Searches postcodes based on passed search term, minimum of 2 letters.
+     *
+     * @param SearchByTextRequest $request
+     * @return JsonResponse
+     */
+    public function searchByText(SearchByTextRequest $request): JsonResponse
+    {
+        // Sanitise the postcode to remove any spaces
+        $search = str_replace(' ', '', $request->get('text'));
+
+        $postcodes = Postcode::where('postcode', 'LIKE', '%' . $search . '%')
+            ->paginate(20);
+
+        return response()->json([
+            'searchTerm' => $search,
+            'postcodes' => $postcodes,
+        ]);
+    }
+
+    /**
      * Takes latitude & longitude and finds all postcodes within a specific radius
      *
      * @param SearchByLocationRequest $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \PHPCoord\Exception\UnknownCoordinateReferenceSystemException
      */
-    public function searchByLocation(SearchByLocationRequest $request)
+    public function searchByLocation(SearchByLocationRequest $request): JsonResponse
     {
         $latitude = $request->get('latitude');
         $longitude = $request->get('longitude');
