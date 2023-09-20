@@ -31,4 +31,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'os_datahub' => [
+        'url' => env('OS_DATAHUB_API_URL'),
+        'api_key' => env('OS_DATAHUB_API_KEY'),
+    ],
+
 ];
